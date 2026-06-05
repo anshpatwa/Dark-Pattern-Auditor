@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     # Free alternative: Google Gemini (https://aistudio.google.com — no card needed).
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.0-flash"
+    gemini_model: str = "gemini-2.5-flash"
 
     # "auto" -> Claude if its key is set, else Gemini if its key is set, else heuristic.
     # Can also be forced to "claude", "gemini" or "heuristic".

@@ -369,18 +369,25 @@ class GeminiEngine:
             used_vision = True
         parts.append(types.Part.from_text(text=text_block))
 
+        config_kwargs = dict(
+            system_instruction=SYSTEM_PROMPT,
+            response_mime_type="application/json",
+            response_schema=_GResult,
+            temperature=0.2,
+            max_output_tokens=8192,
+        )
+        # Gemini 2.5 models spend output tokens on internal "thinking", which can
+        # truncate the JSON. 2.5 Flash supports a zero budget, so turn it off and
+        # give all tokens to the structured answer.
+        if "2.5" in self.settings.gemini_model:
+            config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+
         client = genai.Client(api_key=self.settings.gemini_api_key)
         try:
             resp = await client.aio.models.generate_content(
                 model=self.settings.gemini_model,
                 contents=parts,
-                config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM_PROMPT,
-                    response_mime_type="application/json",
-                    response_schema=_GResult,
-                    temperature=0.2,
-                    max_output_tokens=3000,
-                ),
+                config=types.GenerateContentConfig(**config_kwargs),
             )
         except Exception as exc:  # noqa: BLE001
             raise AnalysisError(f"Gemini request failed: {exc}") from exc
