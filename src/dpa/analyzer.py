@@ -12,14 +12,17 @@ Two engines share one interface:
 from __future__ import annotations
 
 import base64
+import json
 import re
 from dataclasses import dataclass
+
+from pydantic import BaseModel
 
 from dpa.config import Settings
 from dpa.config import settings as default_settings
 from dpa.fetcher import FetchedPage
 from dpa.models import AuditReport, Finding, Severity, known_default_severity
-from dpa.prompts import REPORT_TOOL, SYSTEM_PROMPT, build_user_content
+from dpa.prompts import REPORT_TOOL, SYSTEM_PROMPT, build_user_content, page_text_block
 
 
 class AnalysisError(RuntimeError):
@@ -312,6 +315,117 @@ class ClaudeEngine:
 
 
 # ==========================================================================
+# Gemini engine (free alternative)
+# ==========================================================================
+
+class _GFinding(BaseModel):
+    """Flat schema handed to Gemini for structured output (mapped to Finding after)."""
+
+    pattern_key: str
+    category: str
+    severity: str
+    title: str
+    description: str
+    evidence: str
+    recommendation: str
+    confidence: float
+    location: str = ""
+
+
+class _GResult(BaseModel):
+    summary: str
+    findings: list[_GFinding] = []
+
+
+class GeminiEngine:
+    """AI engine backed by Google Gemini (free tier) with structured output + vision."""
+
+    name = "gemini"
+
+    def __init__(self, settings: Settings | None = None) -> None:
+        self.settings = settings or default_settings
+        if not self.settings.has_gemini_key:
+            raise AnalysisError("GEMINI_API_KEY is not set; cannot use the Gemini engine.")
+
+    async def analyze(self, page: FetchedPage) -> AuditReport:
+        from google import genai  # imported lazily so offline mode needs no SDK
+        from google.genai import types
+
+        text_block = page_text_block(
+            url=page.final_url or page.url,
+            page_title=page.title,
+            text=page.truncated_text(self.settings.dpa_max_text_chars),
+            interactive_elements=page.interactive_elements,
+        )
+
+        parts: list = []
+        used_vision = False
+        if self.settings.dpa_use_vision and page.screenshot_bytes:
+            parts.append(
+                types.Part.from_bytes(
+                    data=page.screenshot_bytes, mime_type=page.screenshot_media_type
+                )
+            )
+            used_vision = True
+        parts.append(types.Part.from_text(text=text_block))
+
+        client = genai.Client(api_key=self.settings.gemini_api_key)
+        try:
+            resp = await client.aio.models.generate_content(
+                model=self.settings.gemini_model,
+                contents=parts,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_PROMPT,
+                    response_mime_type="application/json",
+                    response_schema=_GResult,
+                    temperature=0.2,
+                    max_output_tokens=3000,
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001
+            raise AnalysisError(f"Gemini request failed: {exc}") from exc
+
+        payload = self._extract_payload(resp)
+        findings = self._parse_findings(payload.get("findings", []))
+
+        notes = [*page.notes, f"AI engine: Google Gemini ({self.settings.gemini_model})."]
+        if used_vision:
+            notes.append("Screenshot included for vision analysis.")
+
+        return AuditReport(
+            url=page.final_url or page.url,
+            page_title=page.title,
+            engine=self.name,
+            model=self.settings.gemini_model,
+            summary=str(payload.get("summary", "")).strip(),
+            findings=findings,
+            notes=notes,
+        )
+
+    @staticmethod
+    def _extract_payload(resp) -> dict:
+        raw = getattr(resp, "text", None)
+        if not raw:
+            raise AnalysisError("Gemini returned an empty response.")
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise AnalysisError(f"Gemini did not return valid JSON: {exc}") from exc
+
+    @staticmethod
+    def _parse_findings(raw: list[dict]) -> list[Finding]:
+        findings: list[Finding] = []
+        for item in raw:
+            try:
+                data = dict(item)
+                data["location"] = data.get("location") or None
+                findings.append(Finding(**data))
+            except Exception:  # noqa: BLE001 - skip malformed items, keep the rest
+                continue
+        return findings
+
+
+# ==========================================================================
 # Factory
 # ==========================================================================
 
@@ -321,4 +435,6 @@ def get_engine(settings: Settings | None = None):
     choice = settings.resolved_engine()
     if choice == "claude":
         return ClaudeEngine(settings)
+    if choice == "gemini":
+        return GeminiEngine(settings)
     return HeuristicEngine(settings)

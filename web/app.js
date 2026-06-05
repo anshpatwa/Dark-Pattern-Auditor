@@ -18,8 +18,9 @@ async function boot() {
   try {
     const health = await fetch("/api/health").then((r) => r.json());
     const pill = $("#enginePill");
-    if (health.engine === "claude") {
-      pill.textContent = `AI · Claude (${health.model})`;
+    const aiNames = { claude: "Claude", gemini: "Gemini" };
+    if (aiNames[health.engine]) {
+      pill.textContent = `AI · ${aiNames[health.engine]} (${health.model})`;
       pill.classList.add("ai");
     } else {
       pill.textContent = "Heuristic mode (add API key for AI)";

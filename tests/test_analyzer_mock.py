@@ -1,6 +1,6 @@
 import pytest
 
-from dpa.analyzer import HeuristicEngine, get_engine
+from dpa.analyzer import ClaudeEngine, GeminiEngine, HeuristicEngine, get_engine
 from dpa.config import Settings
 from dpa.service import audit_html
 
@@ -38,5 +38,18 @@ async def test_each_finding_carries_evidence(dark_html, heuristic_settings):
 
 
 def test_get_engine_falls_back_to_heuristic_without_key():
-    engine = get_engine(Settings(dpa_engine="auto", anthropic_api_key=""))
+    engine = get_engine(Settings(dpa_engine="auto", anthropic_api_key="", gemini_api_key=""))
     assert isinstance(engine, HeuristicEngine)
+
+
+def test_auto_prefers_gemini_when_only_gemini_key_present():
+    settings = Settings(dpa_engine="auto", anthropic_api_key="", gemini_api_key="g-test")
+    assert settings.resolved_engine() == "gemini"
+    assert settings.active_model() == settings.gemini_model
+    assert isinstance(get_engine(settings), GeminiEngine)
+
+
+def test_auto_prefers_claude_when_both_keys_present():
+    settings = Settings(dpa_engine="auto", anthropic_api_key="a-test", gemini_api_key="g-test")
+    assert settings.resolved_engine() == "claude"
+    assert isinstance(get_engine(settings), ClaudeEngine)

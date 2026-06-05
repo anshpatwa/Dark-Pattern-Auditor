@@ -50,8 +50,9 @@ async def health() -> dict:
         "status": "ok",
         "version": __version__,
         "engine": settings.resolved_engine(),
+        "model": settings.active_model(),
         "has_api_key": settings.has_api_key,
-        "model": settings.dpa_model,
+        "has_gemini_key": settings.has_gemini_key,
         "vision": settings.dpa_use_vision,
     }
 

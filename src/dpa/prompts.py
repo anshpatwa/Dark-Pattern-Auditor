@@ -94,6 +94,25 @@ REPORT_TOOL = {
 }
 
 
+def page_text_block(
+    *,
+    url: str,
+    page_title: str | None,
+    text: str,
+    interactive_elements: list[str],
+) -> str:
+    """The plain-text description of the page, shared by all AI engines."""
+    elements_block = "\n".join(f"- {e}" for e in interactive_elements[:120]) or "(none extracted)"
+    return (
+        f"URL: {url}\n"
+        f"Page title: {page_title or '(unknown)'}\n\n"
+        f"=== Interactive elements (buttons, links, form controls) ===\n"
+        f"{elements_block}\n\n"
+        f"=== Visible page text ===\n"
+        f"{text}"
+    )
+
+
 def build_user_content(
     *,
     url: str,
@@ -104,14 +123,8 @@ def build_user_content(
     screenshot_media_type: str = "image/png",
 ) -> list[dict]:
     """Assemble the multimodal user message for Claude."""
-    elements_block = "\n".join(f"- {e}" for e in interactive_elements[:120]) or "(none extracted)"
-    text_block = (
-        f"URL: {url}\n"
-        f"Page title: {page_title or '(unknown)'}\n\n"
-        f"=== Interactive elements (buttons, links, form controls) ===\n"
-        f"{elements_block}\n\n"
-        f"=== Visible page text ===\n"
-        f"{text}"
+    text_block = page_text_block(
+        url=url, page_title=page_title, text=text, interactive_elements=interactive_elements
     )
 
     content: list[dict] = []

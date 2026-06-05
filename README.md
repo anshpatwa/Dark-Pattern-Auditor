@@ -27,10 +27,12 @@ guidelines). This tool audits a page for them, automatically.
 
 ## ✨ Features
 
-- **🧠 AI detection engine** — sends the rendered page **and a screenshot** to Claude and
+- **🧠 AI detection engine** — sends the rendered page **and a screenshot** to an LLM and
   gets back schema-validated findings (multimodal: it reads *and sees* the page).
+- **🔌 Pluggable backends** — use **Anthropic Claude** *or* **Google Gemini** (which has a
+  **free tier, no credit card**). The engine auto-selects from whichever key you provide.
 - **🦾 Works with no API key** — a built-in **heuristic engine** runs fully offline, so the
-  app demos instantly; add an Anthropic key later to unlock the AI engine.
+  app demos instantly; add a (free) key later to unlock the AI engine.
 - **🌐 Full-browser rendering** — uses **Playwright** (headless Chromium) to catch
   JavaScript-injected timers, pop-ups and pre-checked boxes; falls back to a static
   fetch automatically if a browser isn't available.
@@ -74,15 +76,19 @@ pip install -e .
 python -m playwright install chromium
 
 # 3. (Optional) enable the AI engine
-copy .env.example .env        # then paste your ANTHROPIC_API_KEY
+copy .env.example .env
+#   then add ONE of:
+#     GEMINI_API_KEY=...      ← free, no card: https://aistudio.google.com
+#     ANTHROPIC_API_KEY=...   ← Claude (paid): https://console.anthropic.com
 
 # 4. Launch the dashboard
 dpa serve
 #  → open http://127.0.0.1:8000
 ```
 
-Without an API key it runs in **heuristic mode** and still produces a full report.
-Add `ANTHROPIC_API_KEY` to `.env` to switch to the **Claude** engine automatically.
+Without any key it runs in **heuristic mode** and still produces a full report.
+Add a **`GEMINI_API_KEY`** (free) or **`ANTHROPIC_API_KEY`** to `.env` and the matching
+AI engine is selected automatically — the dashboard pill flips to "AI · Gemini/Claude".
 
 ## 🖥️ CLI usage
 
