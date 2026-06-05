@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dark Pattern Auditor — detect deceptive UX with AI</title>
+  <meta name="description" content="AI-powered auditor that detects dark patterns (deceptive UX) on any web page." />
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕵️</text></svg>" />
+</head>
+<body>
+  <div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="site-header">
+    <div class="brand">
+      <span class="logo">🕵️</span>
+      <div>
+        <h1>Dark Pattern Auditor</h1>
+        <p class="tagline">Detect deceptive UX on any web page — powered by AI</p>
+      </div>
+    </div>
+    <div class="engine-pill" id="enginePill" title="Active analysis engine">…</div>
+  </header>
+
+  <main>
+    <section class="audit-panel">
+      <form id="auditForm" autocomplete="off">
+        <div class="input-row">
+          <input
+            id="urlInput"
+            type="url"
+            inputmode="url"
+            placeholder="https://example.com/checkout"
+            aria-label="URL to audit"
+            required
+          />
+          <button type="submit" id="auditBtn">
+            <span class="btn-label">Audit page</span>
+          </button>
+        </div>
+        <div class="options-row">
+          <label class="switch">
+            <input type="checkbox" id="browserToggle" checked />
+            <span>Render with headless browser (catches JS-injected patterns)</span>
+          </label>
+          <div class="examples">
+            Try:
+            <button type="button" class="chip" data-url="https://example.com">example.com</button>
+            <button type="button" class="chip" data-url="https://news.ycombinator.com">news.ycombinator.com</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section id="status" class="status hidden" aria-live="polite"></section>
+
+    <section id="results" class="results hidden">
+      <div class="scorecard">
+        <div class="grade-ring" id="gradeRing">
+          <span id="gradeLetter">–</span>
+        </div>
+        <div class="score-block">
+          <div class="score-line"><strong id="scoreValue">–</strong><span>/100 honesty score</span></div>
+          <div class="risk-line" id="riskLine">–</div>
+          <div class="meta-line" id="metaLine"></div>
+        </div>
+        <div class="sev-counts" id="sevCounts"></div>
+      </div>
+
+      <p class="summary" id="summary"></p>
+
+      <div class="findings-head">
+        <h2 id="findingsTitle">Findings</h2>
+        <a id="reportLink" class="ghost-btn" target="_blank" rel="noopener">Open shareable report ↗</a>
+      </div>
+      <div id="findings" class="findings"></div>
+
+      <details class="notes" id="notesWrap">
+        <summary>Audit details</summary>
+        <ul id="notes"></ul>
+      </details>
+    </section>
+
+    <section class="taxonomy-teaser">
+      <h2>What it looks for</h2>
+      <p class="muted">Seven research-backed categories of dark patterns (Mathur et al., 2019 + deceptive.design):</p>
+      <div id="taxonomyChips" class="tax-chips"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Built with FastAPI · Playwright · Claude</span>
+    <a href="https://github.com/anshpatwa/Dark-Pattern-Auditor" target="_blank" rel="noopener">GitHub ↗</a>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

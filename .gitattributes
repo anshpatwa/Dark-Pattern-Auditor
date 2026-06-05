@@ -1,0 +1,18 @@
+# Normalise line endings: store text as LF in the repo, check out native on Windows.
+* text=auto
+
+# Always LF for these (scripts/config that may run on Linux CI).
+*.py    text eol=lf
+*.toml  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.js    text eol=lf
+
+# Treat screenshots/binaries as binary.
+*.png   binary
+*.jpg   binary
+*.ico   binary
