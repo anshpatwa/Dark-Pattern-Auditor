@@ -153,6 +153,19 @@ ruff check src tests
 The test suite audits bundled fixture pages
 ([`examples/`](examples/)) with the heuristic engine, so CI is hermetic.
 
+## 🚀 Deploy it publicly
+
+A `Dockerfile` (built on Playwright's official image) makes this deployable to any
+Docker host for **free, no credit card**. Step-by-step for **Hugging Face Spaces**
+(full browser + vision) and **Render** (one-click from GitHub) is in
+[`DEPLOY.md`](DEPLOY.md). The public API is **SSRF-guarded** — it refuses to fetch
+`localhost`/private/cloud-metadata addresses.
+
+```bash
+docker build -t dpa .
+docker run -p 8000:7860 -e GEMINI_API_KEY=your_key dpa   # → http://localhost:8000
+```
+
 ## 🗺️ Roadmap
 
 - [ ] Batch auditing + CSV/HTML export across many URLs

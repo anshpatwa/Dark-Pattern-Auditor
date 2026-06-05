@@ -1,0 +1,21 @@
+# Keep secrets and local cruft out of the build context / image.
+.env
+.env.*
+!.env.example
+
+.git/
+.github/
+.claude/
+.venv/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+reports/
+screenshots/
+ms-playwright/
+*.ipynb
+tests/
+docs/

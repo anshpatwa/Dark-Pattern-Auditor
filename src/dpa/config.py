@@ -35,6 +35,9 @@ class Settings(BaseSettings):
 
     # --- Fetching ---------------------------------------------------------
     dpa_fetch_timeout: int = 30
+    # On a public deployment, block fetching private/loopback/internal hosts (SSRF
+    # guard). Set true only for local development if you need to audit localhost.
+    dpa_allow_private_hosts: bool = False
 
     # --- Web server -------------------------------------------------------
     dpa_host: str = "127.0.0.1"

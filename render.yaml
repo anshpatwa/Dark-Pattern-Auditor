@@ -1,0 +1,20 @@
+# Render Blueprint — deploy straight from this GitHub repo.
+# In Render: New + → Blueprint → pick this repo → set GEMINI_API_KEY when prompted.
+services:
+  - type: web
+    name: dark-pattern-auditor
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # Secret — paste your key in the Render dashboard; never committed.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: DPA_ENGINE
+        value: auto
+      # Free tier has limited RAM; if Chromium can't start it falls back to a
+      # fast static fetch automatically (text-only AI, no screenshot/vision).

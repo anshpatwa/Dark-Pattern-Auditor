@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from dpa import __version__
 from dpa.config import settings
 from dpa.report import to_html, to_json
+from dpa.security import UnsafeURLError, ensure_public_url
 from dpa.service import audit_html, audit_url
 from dpa.taxonomy import categories
 
@@ -75,10 +76,20 @@ async def taxonomy() -> dict:
     }
 
 
+def _validate_target(url: str) -> None:
+    """Reject non-http(s) and (unless allowed) private/internal hosts."""
+    if not settings.dpa_allow_private_hosts:
+        try:
+            ensure_public_url(url)
+        except UnsafeURLError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+    elif not (url.startswith("http://") or url.startswith("https://")):
+        raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
+
+
 @app.post("/api/audit")
 async def api_audit(req: AuditRequest) -> JSONResponse:
-    if not (req.url.startswith("http://") or req.url.startswith("https://")):
-        raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
+    _validate_target(req.url)
     try:
         report = await audit_url(req.url, use_browser=req.use_browser, capture_screenshot=req.use_browser)
     except Exception as exc:  # noqa: BLE001
@@ -95,6 +106,7 @@ async def api_audit_html(req: AuditHtmlRequest) -> JSONResponse:
 @app.post("/api/audit/report.html", response_class=HTMLResponse)
 async def api_audit_html_report(req: AuditRequest) -> HTMLResponse:
     """Return a shareable, standalone HTML report for a URL."""
+    _validate_target(req.url)
     report = await audit_url(req.url, use_browser=req.use_browser, capture_screenshot=req.use_browser)
     return HTMLResponse(to_html(report))
 
