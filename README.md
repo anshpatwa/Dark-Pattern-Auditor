@@ -10,7 +10,7 @@ and tells you how to fix each issue.
 [![CI](https://github.com/anshpatwa/Dark-Pattern-Auditor/actions/workflows/ci.yml/badge.svg)](https://github.com/anshpatwa/Dark-Pattern-Auditor/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Powered by Claude](https://img.shields.io/badge/AI-Claude-a06bff.svg)](https://www.anthropic.com/)
+[![Powered by Gemini](https://img.shields.io/badge/AI-Gemini-4b8bff.svg)](https://ai.google.dev/)
 [![Code style: ruff](https://img.shields.io/badge/lint-ruff-261230.svg)](https://github.com/astral-sh/ruff)
 
 </div>
@@ -29,8 +29,8 @@ guidelines). This tool audits a page for them, automatically.
 
 - **🧠 AI detection engine** — sends the rendered page **and a screenshot** to an LLM and
   gets back schema-validated findings (multimodal: it reads *and sees* the page).
-- **🔌 Pluggable backends** — use **Anthropic Claude** *or* **Google Gemini** (which has a
-  **free tier, no credit card**). The engine auto-selects from whichever key you provide.
+- **🔌 Pluggable backends** — use **Google Gemini** (which has a **free tier, no credit
+  card**) *or* **Anthropic Claude**. The engine auto-selects from whichever key you provide.
 - **🦾 Works with no API key** — a built-in **heuristic engine** runs fully offline, so the
   app demos instantly; add a (free) key later to unlock the AI engine.
 - **🌐 Full-browser rendering** — uses **Playwright** (headless Chromium) to catch
@@ -184,5 +184,5 @@ to, and respect each site's terms of service and rate limits.
 [MIT](LICENSE) © 2026 Ansh Patwa
 
 <div align="center">
-<sub>Built with FastAPI · Playwright · Anthropic Claude · Pydantic</sub>
+<sub>Built with FastAPI · Playwright · Pydantic</sub>
 </div>

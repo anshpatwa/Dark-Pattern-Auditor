@@ -48,5 +48,5 @@ screenshots/
 .DS_Store
 Thumbs.db
 
-# Claude Code local (machine-specific permissions, not for the repo)
-.claude/settings.local.json
+# Local editor/workspace config — not part of the project
+.claude/
