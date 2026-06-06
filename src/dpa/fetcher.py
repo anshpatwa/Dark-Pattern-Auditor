@@ -13,6 +13,10 @@ from dpa.config import settings
 
 _WHITESPACE = re.compile(r"\n\s*\n\s*\n+")
 
+# How long to let JavaScript widgets (timers, popups, scarcity banners) settle
+# after the DOM is ready, before snapshotting the page.
+_RENDER_SETTLE_MS = 2500
+
 
 @dataclass
 class FetchedPage:
@@ -124,7 +128,8 @@ async def fetch_page(
 async def _fetch_with_playwright(
     url: str, *, capture_screenshot: bool, timeout: int
 ) -> FetchedPage:
-    from playwright.async_api import async_playwright  # imported lazily
+    from playwright.async_api import TimeoutError as PWTimeout  # imported lazily
+    from playwright.async_api import async_playwright
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -137,9 +142,17 @@ async def _fetch_with_playwright(
                 ),
             )
             page = await context.new_page()
-            await page.goto(url, wait_until="networkidle", timeout=timeout * 1000)
-            # Give late client-side widgets (timers, popups) a moment to appear.
-            await page.wait_for_timeout(1200)
+            # Wait for the DOM to be ready rather than full "networkidle": ad- and
+            # tracker-heavy sites never go idle, which used to time out and force a
+            # static-fetch fallback. Then best-effort wait for the network to settle
+            # (capped so it never blocks) and let late JS widgets (timers, popups,
+            # scarcity/urgency banners) render before we snapshot.
+            await page.goto(url, wait_until="domcontentloaded", timeout=timeout * 1000)
+            try:
+                await page.wait_for_load_state("networkidle", timeout=4000)
+            except PWTimeout:
+                pass
+            await page.wait_for_timeout(_RENDER_SETTLE_MS)
 
             html = await page.content()
             final_url = page.url
